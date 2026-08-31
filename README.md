@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ⚡ Ar3s Kişisel Portfolyo & Bio Link Sitesi
 
 Bu proje, tamamen kişiselleştirilebilir, animasyonlu parçacık arka planı, müzik çaları, cam efekti (glassmorphism), Discord canlı durum entegrasyonu ve güçlü bir **Yönetici Paneli** içeren kişisel portfolyo ve bio link web sitesidir.
@@ -54,3 +55,6 @@ site/
 │   └── login.html          # Giriş Sayfası
 └── README.md
 ```
+=======
+# ar3s-bio
+>>>>>>> 87e00f7fdac25366926960ce64e9c54d9b59ead9
