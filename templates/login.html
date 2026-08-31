@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap - Ar3s Admin Paneli</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+        }
+        body {
+            background-color: #08080c;
+            color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card {
+            background: rgba(15, 15, 22, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px -10px rgba(139, 92, 246, 0.3);
+            width: 100%;
+            max-width: 420px;
+            z-index: 10;
+        }
+        .input-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: all 0.25s ease;
+        }
+        .input-box:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.35);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <!-- Starfield canvas -->
+    <canvas id="stars-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <div class="login-card p-8 relative">
+        <!-- Logo / Header -->
+        <div class="text-center mb-6">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white text-2xl shadow-[0_0_25px_rgba(139,92,246,0.5)] mb-3">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white tracking-tight" id="form-title">Yönetici Girişi</h1>
+            <p class="text-xs text-gray-400 mt-1" id="form-subtitle">Ar3s portfolyo ayarlarınızı düzenlemek için giriş yapın</p>
+        </div>
+
+        <!-- Alert Message Box -->
+        <div id="alert-box" class="hidden mb-4 p-3 rounded-xl text-xs font-medium border"></div>
+
+        <!-- Form -->
+        <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Kullanıcı Adı</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="username" required placeholder="admin" autocomplete="username"
+                           class="input-box w-full pl-10 pr-4 py-2.5 rounded-xl text-sm placeholder-gray-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Şifre</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 text-sm">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password"
+                           class="input-box w-full pl-10 pr-10 py-2.5 rounded-xl text-sm placeholder-gray-500">
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-white text-sm">
+                        <i class="fa-solid fa-eye" id="toggle-pwd-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" 
+                    class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm transition-all shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:shadow-[0_0_35px_rgba(139,92,246,0.6)] flex items-center justify-center gap-2">
+                <span id="btn-text">Giriş Yap</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-white/5 text-center flex items-center justify-between text-xs text-gray-500">
+            <a href="/" class="hover:text-gray-300 transition flex items-center gap-1">
+                <i class="fa-solid fa-arrow-left text-[10px]"></i> Sitemize Dön
+            </a>
+            <span id="setup-indicator" class="text-[11px] text-purple-400 hidden">İlk Kurulum Modu</span>
+        </div>
+    </div>
+
+    <!-- Starfield Animation -->
+    <script>
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, stars = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        for (let i = 0; i < 60; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 2 + 0.5,
+                alpha: Math.random() * 0.8 + 0.2,
+                speed: (Math.random() - 0.5) * 0.3
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+            for (let s of stars) {
+                s.y += s.speed;
+                if (s.y < 0) s.y = height;
+                if (s.y > height) s.y = 0;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(168, 85, 247, ${s.alpha})`;
+                ctx.fill();
+            }
+            requestAnimationFrame(render);
+        }
+        render();
+
+        let isSetupMode = false;
+
+        // Check if admin exists
+        fetch('/api/admin/status')
+            .then(res => res.json())
+            .then(data => {
+                if (data.is_logged_in) {
+                    window.location.href = '/admin';
+                    return;
+                }
+                if (!data.has_admin) {
+                    isSetupMode = true;
+                    document.getElementById('form-title').textContent = 'İlk Yönetici Kurulumu';
+                    document.getElementById('form-subtitle').textContent = 'Paneli yönetmek için kullanıcı adı ve şifrenizi belirleyin.';
+                    document.getElementById('btn-text').textContent = 'Hesabı Oluştur & Giriş Yap';
+                    document.getElementById('setup-indicator').classList.remove('hidden');
+                }
+            }).catch(() => {});
+
+        function showAlert(msg, isError = true) {
+            const box = document.getElementById('alert-box');
+            box.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-400', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+            if (isError) {
+                box.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-400');
+            } else {
+                box.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+            }
+            box.textContent = msg;
+        }
+
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('password');
+            const icon = document.getElementById('toggle-pwd-icon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwd.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        async function handleAuth(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = document.getElementById('submit-btn');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-70');
+
+            const endpoint = isSetupMode ? '/api/admin/register' : '/api/admin/login';
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    showAlert('Giriş başarılı! Yönlendiriliyorsunuz...', false);
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 800);
+                } else {
+                    showAlert(data.error || 'Giriş yapılamadı!');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-70');
+                }
+            } catch (err) {
+                showAlert('Sunucuya bağlanılamadı.');
+                btn.disabled = false;
+                btn.classList.remove('opacity-70');
+            }
+        }
+    </script>
+</body>
+</html>

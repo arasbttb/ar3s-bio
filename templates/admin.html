@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ar3s Yönetim Paneli - Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- SweetAlert2 for notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+        }
+        body {
+            background-color: #09090e;
+            color: #f3f4f6;
+        }
+        .admin-sidebar {
+            background: rgba(13, 13, 18, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .admin-card {
+            background: rgba(18, 18, 25, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+        }
+        .input-dark {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+        .input-dark:focus {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            outline: none;
+        }
+        .nav-tab-btn {
+            transition: all 0.2s ease;
+        }
+        .nav-tab-btn.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(99, 102, 241, 0.15));
+            border-color: #8b5cf6;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 10px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navigation Header -->
+    <header class="h-16 border-b border-white/10 bg-black/40 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white text-lg shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                    Ar3s <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 font-mono">STUDIO</span>
+                </h1>
+                <p class="text-[11px] text-gray-400 font-mono">Profilinizi ve Sitenizi Özelleştirin</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <a href="/" target="_blank" class="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[11px] text-purple-400"></i>
+                <span class="hidden sm:inline">Sitemi Canlı Gör</span>
+            </a>
+            <button onclick="handleLogout()" class="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs text-red-400 font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-right-from-bracket text-[11px]"></i>
+                <span class="hidden sm:inline">Çıkış Yap</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Admin Container -->
+    <div class="flex-1 flex flex-col md:flex-row">
+        <!-- Sidebar Tabs -->
+        <aside class="admin-sidebar w-full md:w-64 p-3 sm:p-4 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-y-auto shrink-0">
+            <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab-btn active w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-user w-4 text-center text-purple-400"></i>
+                <span>Profil & Kimlik</span>
+            </button>
+            <button onclick="switchTab('socials')" id="tab-btn-socials" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-share-nodes w-4 text-center text-blue-400"></i>
+                <span>Sosyal Medya</span>
+            </button>
+            <button onclick="switchTab('links')" id="tab-btn-links" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-link w-4 text-center text-emerald-400"></i>
+                <span>Butonlar & Projeler</span>
+            </button>
+            <button onclick="switchTab('badges')" id="tab-btn-badges" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-shield-halved w-4 text-center text-amber-400"></i>
+                <span>Rozetler</span>
+            </button>
+            <button onclick="switchTab('music')" id="tab-btn-music" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-music w-4 text-center text-rose-400"></i>
+                <span>Müzik & Ses</span>
+            </button>
+            <button onclick="switchTab('theme')" id="tab-btn-theme" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-wand-magic-sparkles w-4 text-center text-fuchsia-400"></i>
+                <span>Tema & Efektler</span>
+            </button>
+            <button onclick="switchTab('stats')" id="tab-btn-stats" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-chart-simple w-4 text-center text-cyan-400"></i>
+                <span>İstatistikler</span>
+            </button>
+            <button onclick="switchTab('security')" id="tab-btn-security" class="nav-tab-btn w-full px-3.5 py-2.5 rounded-xl border border-transparent text-gray-400 hover:text-white flex items-center gap-3 text-xs font-semibold text-left shrink-0">
+                <i class="fa-solid fa-lock w-4 text-center text-gray-400"></i>
+                <span>Güvenlik & Şifre</span>
+            </button>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-5xl">
+            
+            <!-- 1. PROFILE TAB -->
+            <section id="tab-profile" class="tab-pane space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Profil & Kimlik Ayarları</h2>
+                        <p class="text-xs text-gray-400">Ziyaretçilerin göreceği temel bilgilerinizi düzenleyin.</p>
+                    </div>
+                    <button onclick="saveProfile()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Değişiklikleri Kaydet</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Avatar & Banner Previews -->
+                    <div class="admin-card p-5 space-y-4">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Görseller</h3>
+                        
+                        <!-- Avatar Section -->
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-2">Profil Fotoğrafı (Avatar)</label>
+                            <div class="flex items-center gap-4">
+                                <img id="preview-avatar" src="" class="w-16 h-16 rounded-full object-cover border-2 border-purple-500 shadow-md bg-black" alt="Avatar">
+                                <div class="flex-1 space-y-2">
+                                    <input type="text" id="prof-avatar-url" placeholder="https://... resim URL" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs" oninput="document.getElementById('preview-avatar').src = this.value">
+                                    <div class="flex items-center gap-2">
+                                        <label class="cursor-pointer px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[11px] text-gray-300 transition flex items-center gap-1.5">
+                                            <i class="fa-solid fa-cloud-arrow-up text-purple-400"></i> Dosya Yükle
+                                            <input type="file" class="hidden" accept="image/*" onchange="uploadMedia(this, 'prof-avatar-url', 'preview-avatar')">
+                                        </label>
+                                        <span class="text-[10px] text-gray-500">PNG, JPG, GIF veya WebP</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banner Section -->
+                        <div class="pt-3 border-t border-white/5">
+                            <label class="block text-xs font-medium text-gray-300 mb-2">Banner (Kapak Görseli)</label>
+                            <div class="space-y-2">
+                                <img id="preview-banner" src="" class="w-full h-24 rounded-xl object-cover border border-white/10 shadow-md bg-black" alt="Banner">
+                                <input type="text" id="prof-banner-url" placeholder="https://... banner URL" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs" oninput="document.getElementById('preview-banner').src = this.value">
+                                <div class="flex items-center gap-2">
+                                    <label class="cursor-pointer px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[11px] text-gray-300 transition flex items-center gap-1.5">
+                                        <i class="fa-solid fa-cloud-arrow-up text-purple-400"></i> Banner Yükle
+                                        <input type="file" class="hidden" accept="image/*" onchange="uploadMedia(this, 'prof-banner-url', 'preview-banner')">
+                                    </label>
+                                    <span class="text-[10px] text-gray-500">Önerilen: 1200x400 GIF/Resim</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Basic Info -->
+                    <div class="admin-card p-5 space-y-3.5">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Temel Bilgiler</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Görünen İsim (Display Name)</label>
+                            <input type="text" id="prof-display-name" placeholder="Örn: Aras Bartu" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Kullanıcı Adı (Handle)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-xs">@</span>
+                                <input type="text" id="prof-username" placeholder="aras" class="input-dark w-full pl-7 pr-3 py-2 rounded-xl text-xs">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Biyografi (Bio)</label>
+                            <textarea id="prof-bio" rows="2" placeholder="Kendinizi kısaca tanıtın..." class="input-dark w-full px-3 py-2 rounded-xl text-xs resize-none"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1">Konum</label>
+                                <input type="text" id="prof-location" placeholder="Istanbul, Turkey" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1">Meslek / Unvan</label>
+                                <input type="text" id="prof-occupation" placeholder="Full-Stack Developer" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced & Interactive Profile Fields -->
+                <div class="admin-card p-5 space-y-4">
+                    <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Dinamik & Entegrasyonlar</h3>
+                    
+                    <!-- Dynamic Typewriter Texts -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1.5">
+                            Daktilo Animasyon Metinleri (Typewriter Text)
+                            <span class="text-gray-500 font-normal ml-1">- Profilinizin altında sırayla yazılan havalı sloganlar</span>
+                        </label>
+                        <div id="typewriter-list" class="space-y-2 mb-2"></div>
+                        <button type="button" onclick="addTypewriterItem('')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-purple-400 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Metin Ekle
+                        </button>
+                    </div>
+
+                    <!-- Discord Lanyard Integration & Assistant -->
+                    <div class="pt-4 border-t border-white/5 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1 flex items-center justify-between">
+                                    <span>Discord Kullanıcı ID (Snowflake ID)</span>
+                                    <a href="https://discord.gg/lanyard" target="_blank" class="text-[11px] text-[#5865F2] hover:underline flex items-center gap-1 font-semibold">
+                                        <i class="fa-brands fa-discord"></i> Lanyard Sunucusuna Katıl
+                                    </a>
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="prof-discord-id" placeholder="Örn: 1307737053710258281" class="input-dark flex-1 px-3 py-2 rounded-xl text-xs font-mono">
+                                    <button type="button" onclick="testDiscordConnection()" class="px-3 py-2 bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/40 text-[#5865F2] rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shrink-0">
+                                        <i class="fa-solid fa-satellite-dish"></i> Test Et
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
+                                    💡 <strong>Nasıl Alınır?</strong> Discord Ayarlar > Gelişmiş > <em>Geliştirici Modu</em>'nu açın. Profilinize sağ tıklayıp <em>"Kullanıcı Kimliğini Kopyala"</em> deyin.
+                                </p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1">Özel Durum Mesajı</label>
+                                <input type="text" id="prof-custom-status" placeholder="Creating awesome projects 🚀" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                                <p class="text-[10px] text-gray-500 mt-1.5">Lanyard bağlı değilken veya çevrimdışıyken profilinizde bu mesaj görünür.</p>
+                            </div>
+                        </div>
+
+                        <!-- Discord Test Result & Sync Box -->
+                        <div id="discord-test-result" class="hidden p-3.5 rounded-xl border transition-all text-xs"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SOCIAL LINKS TAB -->
+            <section id="tab-socials" class="tab-pane hidden space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Sosyal Medya Linkleri</h2>
+                        <p class="text-xs text-gray-400">Profilinizde görünecek sosyal medya ikonlarını yönetin.</p>
+                    </div>
+                    <button onclick="openSocialModal()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Yeni Sosyal Link Ekle</span>
+                    </button>
+                </div>
+
+                <div id="socials-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+            </section>
+
+            <!-- 3. CUSTOM BUTTONS / PROJECTS TAB -->
+            <section id="tab-links" class="tab-pane hidden space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Özel Butonlar & Projeler</h2>
+                        <p class="text-xs text-gray-400">Web siteleriniz, projeleriniz ve önemli linkleriniz için şık butonlar oluşturun.</p>
+                    </div>
+                    <button onclick="openLinkModal()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Yeni Buton / Proje Ekle</span>
+                    </button>
+                </div>
+
+                <div id="custom-links-container" class="space-y-3"></div>
+            </section>
+
+            <!-- 4. BADGES TAB -->
+            <section id="tab-badges" class="tab-pane hidden space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Rozetler (Badges)</h2>
+                        <p class="text-xs text-gray-400">İsminizin yanında belirecek özel rozetleri düzenleyin.</p>
+                    </div>
+                    <button onclick="openBadgeModal()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Yeni Rozet Ekle</span>
+                    </button>
+                </div>
+
+                <div id="badges-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            </section>
+
+            <!-- 5. MUSIC PLAYER TAB -->
+            <section id="tab-music" class="tab-pane hidden space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Müzik & Ses Çalar Ayarları</h2>
+                        <p class="text-xs text-gray-400">Ziyaretçileriniz sitenize girdiğinde arka planda çalacak müziği ayarlayın.</p>
+                    </div>
+                    <button onclick="saveMusic()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Kaydet</span>
+                    </button>
+                </div>
+
+                <div class="admin-card p-5 space-y-5">
+                    <div class="flex items-center justify-between pb-4 border-b border-white/5">
+                        <div>
+                            <span class="text-sm font-semibold text-white">Müzik Çaları Aktif Et</span>
+                            <p class="text-xs text-gray-400">Sitede müzik çaların ve ses efektlerinin görünmesini sağlar</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="music-enabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Şarkı Başlığı</label>
+                            <input type="text" id="music-title" placeholder="Örn: After Dark" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Sanatçı</label>
+                            <input type="text" id="music-artist" placeholder="Örn: Mr.Kitty" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Ses Dosyası (Audio MP3 URL / Yükle)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="music-audio-url" placeholder="https://... mp3 bağlantısı" class="input-dark flex-1 px-3 py-2 rounded-xl text-xs font-mono">
+                            <label class="cursor-pointer px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-xl text-xs font-medium transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> MP3 Yükle
+                                <input type="file" class="hidden" accept="audio/*" onchange="uploadAudio(this)">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Albüm Kapağı (Cover Art URL)</label>
+                        <input type="text" id="music-cover-url" placeholder="https://... resim URL" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-300">Döngüde Çal (Loop)</span>
+                            <input type="checkbox" id="music-loop" class="w-4 h-4 rounded text-purple-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-300 mb-1 flex justify-between">
+                                <span>Başlangıç Ses Düzeyi</span>
+                                <span id="vol-display" class="text-purple-400 font-mono">50%</span>
+                            </label>
+                            <input type="range" id="music-volume" min="0" max="1" step="0.05" class="w-full accent-purple-500" oninput="document.getElementById('vol-display').textContent = Math.round(this.value * 100) + '%'">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. THEME & STYLING TAB -->
+            <section id="tab-theme" class="tab-pane hidden space-y-6">
+                <div class="flex items-center justify-between pb-4 border-b border-white/10">
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Tema, Arka Plan & Efektler</h2>
+                        <p class="text-xs text-gray-400">Ar3s estetiğini dilediğiniz gibi özelleştirin.</p>
+                    </div>
+                    <button onclick="saveTheme()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-[0_0_20px_rgba(139,92,246,0.5)] flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Kaydet</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Background Mode Settings -->
+                    <div class="admin-card p-5 space-y-4">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Arka Plan Yapısı</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1.5">Arka Plan Tipi</label>
+                            <select id="theme-bg-type" class="input-dark w-full px-3 py-2 rounded-xl text-xs" onchange="toggleBgUrlInput()">
+                                <option value="particles_stars">✨ Yıldız Parçacıkları (Starfield Parallax)</option>
+                                <option value="particles_snow">❄️ Kar Yağışı (Aesthetic Snow)</option>
+                                <option value="particles_matrix">💻 Matrix Yeşil Kod Yağmuru</option>
+                                <option value="particles_glow">🔮 Kayan Işık Halkaları (Floating Orbs)</option>
+                                <option value="image">🖼️ Özel Resim / GIF Arka Planı</option>
+                                <option value="video">🎬 Özel Video (MP4 Loop)</option>
+                            </select>
+                        </div>
+
+                        <div id="bg-url-group" class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-300">Medya Bağlantısı (Resim / GIF / Video URL)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="theme-bg-url" placeholder="https://... veya dosya yükleyin" class="input-dark flex-1 px-3 py-2 rounded-xl text-xs">
+                                <label class="cursor-pointer px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs text-gray-300 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-upload"></i> Yükle
+                                    <input type="file" class="hidden" accept="image/*,video/*" onchange="uploadMedia(this, 'theme-bg-url')">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Karartma (Dim Opacity)</label>
+                                <input type="number" id="theme-bg-dim" min="0" max="1" step="0.1" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Bulanıklık (Blur px)</label>
+                                <input type="number" id="theme-bg-blur" min="0" max="30" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Colors & Card Aesthetics -->
+                    <div class="admin-card p-5 space-y-4">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Renkler & Kart Stili</h3>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1">Vurgu Rengi (Accent)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="theme-accent-color" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+                                    <input type="text" id="theme-accent-text" class="input-dark flex-1 px-2 py-1 rounded-lg text-xs font-mono" oninput="document.getElementById('theme-accent-color').value = this.value">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-300 mb-1">Işıma Rengi (Glow)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="theme-glow-color" class="w-8 h-8 rounded border-0 bg-transparent cursor-pointer">
+                                    <input type="text" id="theme-glow-text" class="input-dark flex-1 px-2 py-1 rounded-lg text-xs font-mono" oninput="document.getElementById('theme-glow-color').value = this.value">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Yazı Tipi (Font Family)</label>
+                            <select id="theme-font-family" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                                <option value="Outfit">Outfit (Modern & Sleek)</option>
+                                <option value="Inter">Inter (Clean & Minimal)</option>
+                                <option value="Poppins">Poppins (Rounded & Friendly)</option>
+                                <option value="JetBrains Mono">JetBrains Mono (Hacker / Dev)</option>
+                                <option value="Space Grotesk">Space Grotesk (Cyber Tech)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Kart Blur (px)</label>
+                                <input type="number" id="theme-card-blur" min="0" max="50" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Köşe Yuvarlaklığı (px)</label>
+                                <input type="number" id="theme-card-radius" min="0" max="40" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Click to Enter & Cursor Options -->
+                <div class="admin-card p-5 space-y-4">
+                    <h3 class="text-sm font-semibold text-white uppercase tracking-wider text-purple-400">Giriş Ekranı & Efektler</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-300">Giriş Ekranı (Click to Enter)</span>
+                                <input type="checkbox" id="theme-click-enter" class="w-4 h-4 rounded text-purple-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Giriş Ekranı Yazısı</label>
+                                <input type="text" id="theme-click-text" placeholder="[ click anywhere to enter ]" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Alt Yazı</label>
+                                <input type="text" id="theme-click-subtext" placeholder="turn up your volume 🔊" class="input-dark w-full px-3 py-1.5 rounded-lg text-xs">
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">İmleç Efekti (Cursor)</label>
+                                <select id="theme-cursor-effect" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                                    <option value="guns_dot">Ar3s Neon Nokta İmleç</option>
+                                    <option value="none">Normal Sistem İmleci</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-300 mb-1">Tıklama Efekti (Click Animation)</label>
+                                <select id="theme-click-effect" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                                    <option value="sparkle">Parıltı Patlaması (Sparkles)</option>
+                                    <option value="none">Yok</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-white/5">
+                        <label class="block text-xs font-medium text-gray-300 mb-1">Özel CSS (Custom CSS Kodları)</label>
+                        <textarea id="theme-custom-css" rows="3" placeholder="/* Özel CSS kodlarınızı buraya ekleyebilirsiniz */" class="input-dark w-full px-3 py-2 rounded-xl text-xs font-mono resize-none"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. ANALYTICS TAB -->
+            <section id="tab-stats" class="tab-pane hidden space-y-6">
+                <div class="pb-4 border-b border-white/10">
+                    <h2 class="text-xl font-bold text-white">İstatistikler & Tıklamalar</h2>
+                    <p class="text-xs text-gray-400">Profilinizin görüntülenme ve buton etkileşim analitiği.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="admin-card p-5 text-center">
+                        <span class="text-xs text-gray-400 font-medium">Toplam Görüntülenme</span>
+                        <h3 class="text-3xl font-extrabold text-white mt-1 text-purple-400" id="stat-views">0</h3>
+                    </div>
+                    <div class="admin-card p-5 text-center">
+                        <span class="text-xs text-gray-400 font-medium">Özel Link Tıklamaları</span>
+                        <h3 class="text-3xl font-extrabold text-white mt-1 text-emerald-400" id="stat-link-clicks">0</h3>
+                    </div>
+                    <div class="admin-card p-5 text-center">
+                        <span class="text-xs text-gray-400 font-medium">Sosyal Medya Tıklamaları</span>
+                        <h3 class="text-3xl font-extrabold text-white mt-1 text-blue-400" id="stat-social-clicks">0</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="admin-card p-5 space-y-3">
+                        <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Popüler Butonlar</h4>
+                        <div id="stat-links-list" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="admin-card p-5 space-y-3">
+                        <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Sosyal Medya Etkileşimi</h4>
+                        <div id="stat-socials-list" class="space-y-2 text-xs"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. SECURITY TAB -->
+            <section id="tab-security" class="tab-pane hidden space-y-6">
+                <div class="pb-4 border-b border-white/10">
+                    <h2 class="text-xl font-bold text-white">Güvenlik & Hesap Ayarları</h2>
+                    <p class="text-xs text-gray-400">Yönetici kullanıcı adınızı ve şifrenizi güncelleyin.</p>
+                </div>
+
+                <div class="admin-card p-6 max-w-md space-y-4">
+                    <form onsubmit="handlePasswordChange(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Mevcut Şifreniz</label>
+                            <input type="password" id="sec-current-pwd" required placeholder="••••••••" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+
+                        <div class="pt-2 border-t border-white/5">
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Yeni Kullanıcı Adı (İsteğe Bağlı)</label>
+                            <input type="text" id="sec-new-username" placeholder="Yeni kullanıcı adı" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-300 mb-1">Yeni Şifre</label>
+                            <input type="password" id="sec-new-pwd" placeholder="Yeni şifreniz" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                        </div>
+
+                        <button type="submit" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition shadow-md">
+                            Bilgileri Güncelle
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals for Add / Edit -->
+    
+    <!-- Social Link Modal -->
+    <div id="social-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="admin-card p-6 w-full max-w-md space-y-4">
+            <h3 class="text-base font-bold text-white" id="social-modal-title">Sosyal Link Ekle</h3>
+            <form onsubmit="handleSaveSocial(event)" class="space-y-3">
+                <input type="hidden" id="social-edit-id">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Platform Seçin</label>
+                    <select id="social-platform" class="input-dark w-full px-3 py-2 rounded-xl text-xs" onchange="autoFillSocialIcon(this.value)">
+                        <option value="discord">Discord</option>
+                        <option value="github">GitHub</option>
+                        <option value="spotify">Spotify</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="x">X / Twitter</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="steam">Steam</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="twitch">Twitch</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="email">E-posta</option>
+                        <option value="custom">Özel Link</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Başlık</label>
+                    <input type="text" id="social-title" required placeholder="Discord" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">URL (Bağlantı)</label>
+                    <input type="text" id="social-url" required placeholder="https://..." class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">İkon (FontAwesome)</label>
+                        <input type="text" id="social-icon" required placeholder="fa-brands fa-discord" class="input-dark w-full px-3 py-2 rounded-xl text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">İkon Rengi</label>
+                        <input type="color" id="social-color" value="#ffffff" class="w-full h-8 rounded border-0 bg-transparent cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeModal('social-modal')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-gray-300">İptal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Link / Project Modal -->
+    <div id="link-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="admin-card p-6 w-full max-w-md space-y-4">
+            <h3 class="text-base font-bold text-white" id="link-modal-title">Özel Buton / Proje Ekle</h3>
+            <form onsubmit="handleSaveLink(event)" class="space-y-3">
+                <input type="hidden" id="link-edit-id">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Buton Başlığı</label>
+                    <input type="text" id="link-title" required placeholder="🚀 GitHub Repolarım" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Açıklama (Alt Metin)</label>
+                    <input type="text" id="link-desc" placeholder="Açık kaynaklı projelerimi inceleyin" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Hedef URL</label>
+                    <input type="text" id="link-url" required placeholder="https://github.com/..." class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">İkon (FontAwesome class)</label>
+                    <input type="text" id="link-icon" placeholder="fa-solid fa-code" class="input-dark w-full px-3 py-2 rounded-xl text-xs font-mono">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Etiket Metni (Badge)</label>
+                        <input type="text" id="link-badge-text" placeholder="Örn: HOT / NEW" class="input-dark w-full px-3 py-2 rounded-xl text-xs uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Etiket Rengi</label>
+                        <input type="color" id="link-badge-color" value="#8b5cf6" class="w-full h-8 rounded border-0 bg-transparent cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeModal('link-modal')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-gray-300">İptal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Badge Modal -->
+    <div id="badge-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+        <div class="admin-card p-6 w-full max-w-md space-y-4">
+            <h3 class="text-base font-bold text-white">Yeni Rozet Ekle</h3>
+            <form onsubmit="handleSaveBadge(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Rozet İsmi</label>
+                    <input type="text" id="badge-name" required placeholder="Verified" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">İkon (FontAwesome Class)</label>
+                    <input type="text" id="badge-icon" required placeholder="fa-solid fa-circle-check" class="input-dark w-full px-3 py-2 rounded-xl text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Açıklama (Tooltip)</label>
+                    <input type="text" id="badge-desc" placeholder="Doğrulanmış Profil" class="input-dark w-full px-3 py-2 rounded-xl text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Rozet Rengi</label>
+                    <input type="color" id="badge-color" value="#3b82f6" class="w-full h-8 rounded border-0 bg-transparent cursor-pointer">
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeModal('badge-modal')" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-gray-300">İptal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold">Rozeti Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        let currentSiteData = null;
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+            
+            const targetPane = document.getElementById(`tab-${tabId}`);
+            const targetBtn = document.getElementById(`tab-btn-${tabId}`);
+            if (targetPane) targetPane.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabId === 'stats') loadStats();
+        }
+
+        // Fetch & Populate All Data
+        async function loadData() {
+            try {
+                const res = await fetch('/api/data');
+                const data = await res.json();
+                currentSiteData = data;
+
+                // Profile Fields
+                const p = data.profile;
+                document.getElementById('prof-display-name').value = p.display_name || '';
+                document.getElementById('prof-username').value = p.username || '';
+                document.getElementById('prof-bio').value = p.bio || '';
+                document.getElementById('prof-location').value = p.location || '';
+                document.getElementById('prof-occupation').value = p.occupation || '';
+                document.getElementById('prof-avatar-url').value = p.avatar_url || '';
+                document.getElementById('preview-avatar').src = p.avatar_url || '';
+                document.getElementById('prof-banner-url').value = p.banner_url || '';
+                document.getElementById('preview-banner').src = p.banner_url || '';
+                document.getElementById('prof-discord-id').value = p.discord_user_id || '';
+                document.getElementById('prof-custom-status').value = p.custom_status || '';
+
+                // Typewriter Items
+                renderTypewriterList(p.typing_texts_list || []);
+
+                // Theme Fields
+                const t = data.theme;
+                document.getElementById('theme-bg-type').value = t.bg_type || 'particles_stars';
+                document.getElementById('theme-bg-url').value = t.bg_url || '';
+                document.getElementById('theme-bg-dim').value = t.bg_dim ?? 0.4;
+                document.getElementById('theme-bg-blur').value = t.bg_blur ?? 0;
+                document.getElementById('theme-accent-color').value = t.accent_color || '#8b5cf6';
+                document.getElementById('theme-accent-text').value = t.accent_color || '#8b5cf6';
+                document.getElementById('theme-glow-color').value = t.glow_color || '#a855f7';
+                document.getElementById('theme-glow-text').value = t.glow_color || '#a855f7';
+                document.getElementById('theme-font-family').value = t.font_family || 'Outfit';
+                document.getElementById('theme-card-blur').value = t.card_blur ?? 20;
+                document.getElementById('theme-card-radius').value = t.card_radius ?? 24;
+                document.getElementById('theme-click-enter').checked = Boolean(t.click_to_enter_enabled);
+                document.getElementById('theme-click-text').value = t.click_to_enter_text || '';
+                document.getElementById('theme-click-subtext').value = t.click_to_enter_subtext || '';
+                document.getElementById('theme-cursor-effect').value = t.cursor_effect || 'guns_dot';
+                document.getElementById('theme-click-effect').value = t.click_effect || 'sparkle';
+                document.getElementById('theme-custom-css').value = t.custom_css || '';
+                toggleBgUrlInput();
+
+                // Music Fields
+                const m = data.music;
+                document.getElementById('music-enabled').checked = Boolean(m.enabled);
+                document.getElementById('music-title').value = m.title || '';
+                document.getElementById('music-artist').value = m.artist || '';
+                document.getElementById('music-audio-url').value = m.audio_url || '';
+                document.getElementById('music-cover-url').value = m.cover_url || '';
+                document.getElementById('music-loop').checked = Boolean(m.loop);
+                document.getElementById('music-volume').value = m.initial_volume ?? 0.5;
+                document.getElementById('vol-display').textContent = Math.round((m.initial_volume ?? 0.5) * 100) + '%';
+
+                // Render lists
+                renderSocials(data.socials || []);
+                renderLinks(data.links || []);
+                renderBadges(data.badges || []);
+
+            } catch (err) {
+                console.error('Data loading failed:', err);
+            }
+        }
+
+        // Typewriter texts manager
+        function renderTypewriterList(list) {
+            const container = document.getElementById('typewriter-list');
+            container.innerHTML = '';
+            list.forEach((text, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                row.innerHTML = `
+                    <input type="text" value="${escapeHtml(text)}" class="typewriter-item-input input-dark flex-1 px-3 py-1.5 rounded-lg text-xs">
+                    <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center transition">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addTypewriterItem(val = '') {
+            const container = document.getElementById('typewriter-list');
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2';
+            row.innerHTML = `
+                <input type="text" value="${escapeHtml(val)}" placeholder="Yeni metin..." class="typewriter-item-input input-dark flex-1 px-3 py-1.5 rounded-lg text-xs">
+                <button type="button" onclick="this.parentElement.remove()" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center transition">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Render Socials
+        function renderSocials(socials) {
+            const container = document.getElementById('socials-container');
+            container.innerHTML = '';
+            if (socials.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center py-6 text-xs text-gray-500">Henüz sosyal medya linki eklenmemiş.</div>`;
+                return;
+            }
+            socials.forEach(s => {
+                const card = document.createElement('div');
+                card.className = 'admin-card p-3.5 flex items-center justify-between';
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg bg-white/5 border border-white/10" style="color: ${s.color || '#fff'}">
+                            <i class="${s.icon}"></i>
+                        </div>
+                        <div class="truncate">
+                            <h4 class="text-xs font-bold text-white truncate">${escapeHtml(s.title)}</h4>
+                            <span class="text-[10px] text-gray-400 truncate block">${escapeHtml(s.url)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="editSocial(${s.id})" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteSocial(${s.id})" class="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Render Links
+        function renderLinks(links) {
+            const container = document.getElementById('custom-links-container');
+            container.innerHTML = '';
+            if (links.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-gray-500">Henüz özel buton eklenmemiş.</div>`;
+                return;
+            }
+            links.forEach(l => {
+                const card = document.createElement('div');
+                card.className = 'admin-card p-4 flex items-center justify-between';
+                card.innerHTML = `
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-base shrink-0">
+                            <i class="${l.icon || 'fa-solid fa-link'}"></i>
+                        </div>
+                        <div class="truncate">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-white truncate">${escapeHtml(l.title)}</span>
+                                ${l.badge_text ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase text-white" style="background:${l.badge_color}">${escapeHtml(l.badge_text)}</span>` : ''}
+                            </div>
+                            <span class="text-[11px] text-gray-400 truncate block mt-0.5">${escapeHtml(l.url)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-[11px] font-mono text-gray-400 px-2 py-1 bg-white/5 rounded-lg">${l.clicks || 0} tık</span>
+                        <button onclick="editLink(${l.id})" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteLink(${l.id})" class="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Render Badges
+        function renderBadges(badges) {
+            const container = document.getElementById('badges-container');
+            container.innerHTML = '';
+            badges.forEach(b => {
+                const card = document.createElement('div');
+                card.className = 'admin-card p-3.5 flex items-center justify-between';
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-white/5" style="color: ${b.color}; border: 1px solid ${b.color}40">
+                            <i class="${b.icon}"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-white block">${escapeHtml(b.name)}</span>
+                            <span class="text-[10px] text-gray-400 block">${escapeHtml(b.description || '')}</span>
+                        </div>
+                    </div>
+                    <button onclick="deleteBadge(${b.id})" class="w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs flex items-center justify-center">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Toggle BG URL input based on type
+        function toggleBgUrlInput() {
+            const val = document.getElementById('theme-bg-type').value;
+            const grp = document.getElementById('bg-url-group');
+            if (val === 'image' || val === 'video') {
+                grp.classList.remove('hidden');
+            } else {
+                grp.classList.add('hidden');
+            }
+        }
+
+        // Save Profile
+        async function saveProfile() {
+            const typingInputs = document.querySelectorAll('.typewriter-item-input');
+            const typing_texts = Array.from(typingInputs).map(i => i.value.trim()).filter(Boolean);
+
+            const payload = {
+                display_name: document.getElementById('prof-display-name').value.trim(),
+                username: document.getElementById('prof-username').value.trim(),
+                bio: document.getElementById('prof-bio').value.trim(),
+                location: document.getElementById('prof-location').value.trim(),
+                occupation: document.getElementById('prof-occupation').value.trim(),
+                avatar_url: document.getElementById('prof-avatar-url').value.trim(),
+                banner_url: document.getElementById('prof-banner-url').value.trim(),
+                discord_user_id: document.getElementById('prof-discord-id').value.trim(),
+                custom_status: document.getElementById('prof-custom-status').value.trim(),
+                typing_texts: typing_texts
+            };
+
+            const res = await fetch('/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Kaydedildi!', text: 'Profiliniz güncellendi.', timer: 1500, showConfirmButton: false });
+            }
+        }
+
+        // Save Theme
+        async function saveTheme() {
+            const payload = {
+                bg_type: document.getElementById('theme-bg-type').value,
+                bg_url: document.getElementById('theme-bg-url').value.trim(),
+                bg_dim: parseFloat(document.getElementById('theme-bg-dim').value) || 0.4,
+                bg_blur: parseInt(document.getElementById('theme-bg-blur').value) || 0,
+                accent_color: document.getElementById('theme-accent-color').value,
+                glow_color: document.getElementById('theme-glow-color').value,
+                font_family: document.getElementById('theme-font-family').value,
+                card_blur: parseInt(document.getElementById('theme-card-blur').value) || 20,
+                card_radius: parseInt(document.getElementById('theme-card-radius').value) || 24,
+                click_to_enter_enabled: document.getElementById('theme-click-enter').checked,
+                click_to_enter_text: document.getElementById('theme-click-text').value,
+                click_to_enter_subtext: document.getElementById('theme-click-subtext').value,
+                cursor_effect: document.getElementById('theme-cursor-effect').value,
+                click_effect: document.getElementById('theme-click-effect').value,
+                custom_css: document.getElementById('theme-custom-css').value
+            };
+
+            const res = await fetch('/api/theme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Kaydedildi!', text: 'Tema ayarları kaydedildi.', timer: 1500, showConfirmButton: false });
+            }
+        }
+
+        // Save Music
+        async function saveMusic() {
+            const payload = {
+                enabled: document.getElementById('music-enabled').checked,
+                title: document.getElementById('music-title').value.trim(),
+                artist: document.getElementById('music-artist').value.trim(),
+                audio_url: document.getElementById('music-audio-url').value.trim(),
+                cover_url: document.getElementById('music-cover-url').value.trim(),
+                loop: document.getElementById('music-loop').checked,
+                initial_volume: parseFloat(document.getElementById('music-volume').value) || 0.5
+            };
+
+            const res = await fetch('/api/music', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Kaydedildi!', text: 'Müzik ayarları kaydedildi.', timer: 1500, showConfirmButton: false });
+            }
+        }
+
+        // Upload Helper
+        async function uploadMedia(input, targetUrlId, previewImgId = null) {
+            if (!input.files || !input.files[0]) return;
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            Swal.fire({ title: 'Yükleniyor...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById(targetUrlId).value = data.url;
+                    if (previewImgId) document.getElementById(previewImgId).src = data.url;
+                    Swal.fire({ icon: 'success', title: 'Yüklendi!', timer: 1200, showConfirmButton: false });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Hata', text: data.error });
+                }
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Hata', text: 'Dosya yüklenemedi.' });
+            }
+        }
+
+        async function uploadAudio(input) {
+            uploadMedia(input, 'music-audio-url');
+        }
+
+        // Modal Helpers
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Social CRUD Modals
+        function openSocialModal() {
+            document.getElementById('social-edit-id').value = '';
+            document.getElementById('social-title').value = '';
+            document.getElementById('social-url').value = '';
+            document.getElementById('social-icon').value = 'fa-brands fa-discord';
+            document.getElementById('social-color').value = '#5865F2';
+            document.getElementById('social-modal-title').textContent = 'Sosyal Link Ekle';
+            openModal('social-modal');
+        }
+
+        function autoFillSocialIcon(platform) {
+            const icons = {
+                discord: { icon: 'fa-brands fa-discord', color: '#5865F2', title: 'Discord' },
+                github: { icon: 'fa-brands fa-github', color: '#ffffff', title: 'GitHub' },
+                spotify: { icon: 'fa-brands fa-spotify', color: '#1DB954', title: 'Spotify' },
+                instagram: { icon: 'fa-brands fa-instagram', color: '#E4405F', title: 'Instagram' },
+                x: { icon: 'fa-brands fa-x-twitter', color: '#ffffff', title: 'X / Twitter' },
+                telegram: { icon: 'fa-brands fa-telegram', color: '#24A1DE', title: 'Telegram' },
+                steam: { icon: 'fa-brands fa-steam', color: '#66c0f4', title: 'Steam' },
+                youtube: { icon: 'fa-brands fa-youtube', color: '#FF0000', title: 'YouTube' },
+                twitch: { icon: 'fa-brands fa-twitch', color: '#9146FF', title: 'Twitch' },
+                tiktok: { icon: 'fa-brands fa-tiktok', color: '#ff0050', title: 'TikTok' },
+                email: { icon: 'fa-solid fa-envelope', color: '#ea4335', title: 'E-posta' },
+                custom: { icon: 'fa-solid fa-link', color: '#ffffff', title: 'Website' }
+            };
+            if (icons[platform]) {
+                document.getElementById('social-icon').value = icons[platform].icon;
+                document.getElementById('social-color').value = icons[platform].color;
+                document.getElementById('social-title').value = icons[platform].title;
+            }
+        }
+
+        function editSocial(id) {
+            const s = currentSiteData.socials.find(item => item.id === id);
+            if (!s) return;
+            document.getElementById('social-edit-id').value = s.id;
+            document.getElementById('social-platform').value = s.platform || 'custom';
+            document.getElementById('social-title').value = s.title;
+            document.getElementById('social-url').value = s.url;
+            document.getElementById('social-icon').value = s.icon;
+            document.getElementById('social-color').value = s.color || '#ffffff';
+            document.getElementById('social-modal-title').textContent = 'Sosyal Linki Düzenle';
+            openModal('social-modal');
+        }
+
+        async function handleSaveSocial(e) {
+            e.preventDefault();
+            const id = document.getElementById('social-edit-id').value;
+            const payload = {
+                platform: document.getElementById('social-platform').value,
+                title: document.getElementById('social-title').value,
+                url: document.getElementById('social-url').value,
+                icon: document.getElementById('social-icon').value,
+                color: document.getElementById('social-color').value
+            };
+
+            const url = id ? `/api/socials/${id}` : '/api/socials';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('social-modal');
+                loadData();
+                Swal.fire({ icon: 'success', title: 'Başarılı!', timer: 1200, showConfirmButton: false });
+            }
+        }
+
+        async function deleteSocial(id) {
+            const conf = await Swal.fire({ title: 'Silinsin mi?', text: 'Bu link profilinizden kaldırılacak.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, Sil', cancelButtonText: 'İptal' });
+            if (conf.isConfirmed) {
+                await fetch(`/api/socials/${id}`, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        // Custom Links CRUD
+        function openLinkModal() {
+            document.getElementById('link-edit-id').value = '';
+            document.getElementById('link-title').value = '';
+            document.getElementById('link-desc').value = '';
+            document.getElementById('link-url').value = '';
+            document.getElementById('link-icon').value = 'fa-solid fa-arrow-up-right-from-square';
+            document.getElementById('link-badge-text').value = '';
+            document.getElementById('link-badge-color').value = '#8b5cf6';
+            document.getElementById('link-modal-title').textContent = 'Özel Buton / Proje Ekle';
+            openModal('link-modal');
+        }
+
+        function editLink(id) {
+            const l = currentSiteData.links.find(item => item.id === id);
+            if (!l) return;
+            document.getElementById('link-edit-id').value = l.id;
+            document.getElementById('link-title').value = l.title;
+            document.getElementById('link-desc').value = l.description || '';
+            document.getElementById('link-url').value = l.url;
+            document.getElementById('link-icon').value = l.icon || 'fa-solid fa-arrow-up-right-from-square';
+            document.getElementById('link-badge-text').value = l.badge_text || '';
+            document.getElementById('link-badge-color').value = l.badge_color || '#8b5cf6';
+            document.getElementById('link-modal-title').textContent = 'Butonu Düzenle';
+            openModal('link-modal');
+        }
+
+        async function handleSaveLink(e) {
+            e.preventDefault();
+            const id = document.getElementById('link-edit-id').value;
+            const payload = {
+                title: document.getElementById('link-title').value,
+                description: document.getElementById('link-desc').value,
+                url: document.getElementById('link-url').value,
+                icon: document.getElementById('link-icon').value,
+                badge_text: document.getElementById('link-badge-text').value,
+                badge_color: document.getElementById('link-badge-color').value
+            };
+
+            const url = id ? `/api/links/${id}` : '/api/links';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('link-modal');
+                loadData();
+                Swal.fire({ icon: 'success', title: 'Başarılı!', timer: 1200, showConfirmButton: false });
+            }
+        }
+
+        async function deleteLink(id) {
+            const conf = await Swal.fire({ title: 'Silinsin mi?', text: 'Bu buton kaldırılacak.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Evet, Sil', cancelButtonText: 'İptal' });
+            if (conf.isConfirmed) {
+                await fetch(`/api/links/${id}`, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        // Badges CRUD
+        function openBadgeModal() {
+            document.getElementById('badge-name').value = '';
+            document.getElementById('badge-icon').value = 'fa-solid fa-certificate';
+            document.getElementById('badge-desc').value = '';
+            document.getElementById('badge-color').value = '#8b5cf6';
+            openModal('badge-modal');
+        }
+
+        async function handleSaveBadge(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('badge-name').value,
+                icon: document.getElementById('badge-icon').value,
+                description: document.getElementById('badge-desc').value,
+                color: document.getElementById('badge-color').value
+            };
+
+            const res = await fetch('/api/badges', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('badge-modal');
+                loadData();
+                Swal.fire({ icon: 'success', title: 'Rozet Eklendi!', timer: 1200, showConfirmButton: false });
+            }
+        }
+
+        async function deleteBadge(id) {
+            const conf = await Swal.fire({ title: 'Rozet Silinsin mi?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sil', cancelButtonText: 'İptal' });
+            if (conf.isConfirmed) {
+                await fetch(`/api/badges/${id}`, { method: 'DELETE' });
+                loadData();
+            }
+        }
+
+        // Stats loader
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            document.getElementById('stat-views').textContent = data.views || 0;
+            document.getElementById('stat-link-clicks').textContent = data.total_link_clicks || 0;
+            document.getElementById('stat-social-clicks').textContent = data.total_social_clicks || 0;
+
+            const linksList = document.getElementById('stat-links-list');
+            linksList.innerHTML = '';
+            (data.top_links || []).forEach(l => {
+                linksList.innerHTML += `
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span class="truncate font-medium text-white">${escapeHtml(l.title)}</span>
+                        <span class="font-mono text-purple-400 font-bold">${l.clicks || 0} tık</span>
+                    </div>
+                `;
+            });
+
+            const socialsList = document.getElementById('stat-socials-list');
+            socialsList.innerHTML = '';
+            (data.top_socials || []).forEach(s => {
+                socialsList.innerHTML += `
+                    <div class="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span class="truncate font-medium text-white">${escapeHtml(s.title)}</span>
+                        <span class="font-mono text-blue-400 font-bold">${s.clicks || 0} tık</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Change Password
+        async function handlePasswordChange(e) {
+            e.preventDefault();
+            const current_password = document.getElementById('sec-current-pwd').value;
+            const new_username = document.getElementById('sec-new-username').value.trim();
+            const new_password = document.getElementById('sec-new-pwd').value.trim();
+
+            const res = await fetch('/api/admin/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_password, new_username, new_password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire({ icon: 'success', title: 'Başarılı!', text: data.message });
+                document.getElementById('sec-current-pwd').value = '';
+                document.getElementById('sec-new-pwd').value = '';
+            } else {
+                Swal.fire({ icon: 'error', title: 'Hata', text: data.error });
+            }
+        }
+
+        // Logout
+        async function handleLogout() {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+            // Discord Connection Tester & Sync
+        let lastDiscordData = null;
+        async function testDiscordConnection() {
+            const id = document.getElementById('prof-discord-id').value.trim();
+            const resBox = document.getElementById('discord-test-result');
+            if (!id) {
+                Swal.fire({ icon: 'warning', title: 'Discord ID Eksik', text: 'Lütfen Discord Kullanıcı ID numaranızı girin.' });
+                return;
+            }
+
+            resBox.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-amber-500/10', 'border-amber-500/30', 'text-amber-300');
+            resBox.innerHTML = `<div class="flex items-center gap-2 text-gray-300"><i class="fa-solid fa-spinner fa-spin text-purple-400"></i> <span>Discord ve Lanyard durumu sorgulanıyor...</span></div>`;
+
+            try {
+                const res = await fetch(`https://api.lanyard.rest/v1/users/${id}`);
+                const data = await res.json();
+
+                if (res.success && data.data) {
+                    const d = data.data;
+                    lastDiscordData = d;
+                    const u = d.discord_user;
+                    const isGif = u.avatar && u.avatar.startsWith('a_');
+                    const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${isGif ? 'gif' : 'webp'}?size=128` : 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+                    resBox.classList.add('bg-emerald-500/10', 'border-emerald-500/30');
+                    resBox.innerHTML = `
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <img src="${avatarUrl}" class="w-10 h-10 rounded-full border border-emerald-500/50" alt="Avatar">
+                                <div>
+                                    <div class="font-bold text-white flex items-center gap-1.5">
+                                        <span>${escapeHtml(u.global_name || u.username)}</span>
+                                        <span class="text-xs font-mono text-gray-400">(@${escapeHtml(u.username)})</span>
+                                    </div>
+                                    <div class="text-[11px] text-emerald-400 flex items-center gap-1.5 mt-0.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]"></span>
+                                        <span>Lanyard Bağlı • Durum: ${d.discord_status.toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="syncDiscordToProfile()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-semibold text-xs transition flex items-center gap-1.5 shrink-0">
+                                <i class="fa-solid fa-arrows-rotate"></i> Bilgileri Profile Aktar
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    resBox.classList.add('bg-amber-500/10', 'border-amber-500/30');
+                    resBox.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-amber-300 font-semibold">
+                                <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                                <span>Lanyard Sunucusunda Bulunamadı</span>
+                            </div>
+                            <p class="text-[11px] text-gray-300 leading-relaxed">
+                                Discord güvenlik kuralları gereği durumunuzu yayınlamak için <strong>Lanyard Discord sunucusunda</strong> bulunmanız gerekmektedir.
+                            </p>
+                            <div class="flex items-center gap-3 pt-1">
+                                <a href="https://discord.gg/lanyard" target="_blank" class="px-3.5 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg font-semibold text-xs transition flex items-center gap-1.5">
+                                    <i class="fa-brands fa-discord"></i> Lanyard Sunucusuna Katıl (discord.gg/lanyard)
+                                </a>
+                                <button type="button" onclick="testDiscordConnection()" class="text-gray-400 hover:text-white underline text-xs">
+                                    Katıldım, Yeniden Dene
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                resBox.classList.add('bg-red-500/10', 'border-red-500/30');
+                resBox.innerHTML = `<span class="text-red-400">Lanyard sunucularına erişilemedi. Lütfen internet bağlantınızı kontrol edin.</span>`;
+            }
+        }
+
+        function syncDiscordToProfile() {
+            if (!lastDiscordData || !lastDiscordData.discord_user) return;
+            const u = lastDiscordData.discord_user;
+            const isGif = u.avatar && u.avatar.startsWith('a_');
+            const avatarUrl = u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${isGif ? 'gif' : 'webp'}?size=512` : '';
+
+            if (avatarUrl) {
+                document.getElementById('prof-avatar-url').value = avatarUrl;
+                document.getElementById('preview-avatar').src = avatarUrl;
+            }
+            if (u.global_name) {
+                document.getElementById('prof-display-name').value = u.global_name;
+            }
+            if (u.username) {
+                document.getElementById('prof-username').value = u.username;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Profil Aktarıldı!',
+                text: 'Discord fotoğrafınız ve isminiz form alanlarına yerleştirildi. Kaydetmek için "Değişiklikleri Kaydet" butonuna basın.',
+                confirmButtonText: 'Tamam'
+            });
+        }
+
+        // Initialize on load
+        loadData();
+    </script>
+</body>
+</html>

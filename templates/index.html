@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile.display_name }} (@{{ profile.username }}) - Ar3s</title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="{{ profile.bio }}">
+    <meta property="og:title" content="{{ profile.display_name }} (@{{ profile.username }})">
+    <meta property="og:description" content="{{ profile.bio }}">
+    <meta property="og:image" content="{{ profile.avatar_url }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --accent: {{ theme.accent_color or '#8b5cf6' }};
+            --glow: {{ theme.glow_color or '#a855f7' }};
+            --card-bg: {{ theme.card_bg_color or 'rgba(15, 15, 20, 0.75)' }};
+            --card-border: {{ theme.card_border_color or 'rgba(255, 255, 255, 0.12)' }};
+            --card-blur: {{ theme.card_blur or 20 }}px;
+            --card-radius: {{ theme.card_radius or 24 }}px;
+            --font: '{{ theme.font_family or 'Outfit' }}', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: #08080c;
+            color: #f3f4f6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        /* Custom Ar3s Cursor */
+        {% if theme.cursor_effect == 'guns_dot' %}
+        .cursor-dot, .cursor-dot-outline {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent);
+            box-shadow: 0 0 10px var(--glow);
+        }
+        .cursor-dot-outline {
+            width: 32px;
+            height: 32px;
+            border: 1.5px solid var(--accent);
+            opacity: 0.6;
+            transition: transform 0.15s ease-out, width 0.2s, height 0.2s, background-color 0.2s;
+        }
+        @media (hover: none) and (pointer: coarse) {
+            .cursor-dot, .cursor-dot-outline { display: none !important; }
+        }
+        {% endif %}
+
+        /* Click to Enter Overlay */
+        #click-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 8, 0.96);
+            backdrop-filter: blur(25px);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+            user-select: none;
+        }
+        #click-overlay.hidden-overlay {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .pulsate-text {
+            font-size: 1.35rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 20px var(--glow), 0 0 40px var(--accent);
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.6; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.03); text-shadow: 0 0 30px var(--glow), 0 0 60px var(--accent); }
+        }
+
+        /* Canvas Background */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Background Media */
+        .custom-bg-media {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            filter: blur({{ theme.bg_blur or 0 }}px);
+            opacity: {{ 1.0 - (theme.bg_dim or 0.4) }};
+        }
+
+        /* Main Profile Card */
+        .profile-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(var(--card-blur));
+            -webkit-backdrop-filter: blur(var(--card-blur));
+            border: 1px solid var(--card-border);
+            border-radius: var(--card-radius);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px -10px var(--glow);
+            width: 100%;
+            max-width: 540px;
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: cardEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardEntrance {
+            0% { opacity: 0; transform: translateY(30px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Banner */
+        .card-banner {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            position: relative;
+            background: linear-gradient(135deg, #1f1f2e, #111119);
+        }
+        .card-banner-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(15, 15, 20, 0.95));
+        }
+
+        /* Avatar */
+        .avatar-wrapper {
+            position: relative;
+            margin-top: -65px;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--accent), var(--glow), #ffffff);
+            box-shadow: 0 0 25px var(--glow);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .avatar-wrapper:hover {
+            transform: scale(1.06) rotate(3deg);
+        }
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #111;
+        }
+        .status-dot {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #10b981;
+            border: 3px solid #0d0d12;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        /* Badges */
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+            transition: all 0.25s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .badge-pill:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 0 12px var(--badge-color, var(--accent));
+            border-color: var(--badge-color, var(--accent));
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+        .badge-pill:hover .tooltip {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+        }
+
+        /* Social Icons */
+        .social-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            color: #e2e8f0;
+            font-size: 18px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .social-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            transform: translateY(-4px) scale(1.08);
+            border-color: var(--social-color, var(--accent));
+            box-shadow: 0 6px 20px -2px var(--social-color, var(--glow));
+        }
+
+        /* Showcase Custom Links */
+        .custom-link-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+        }
+        .custom-link-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            transition: 0.5s;
+        }
+        .custom-link-card:hover::before {
+            left: 100%;
+        }
+        .custom-link-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px -3px var(--glow);
+        }
+        .custom-link-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--accent);
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .custom-link-card:hover .custom-link-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        /* Music Player Bar (Top Floating or Embedded) */
+        .music-player-widget {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 15, 22, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 50px;
+            padding: 6px 16px 6px 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 50;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px -5px var(--glow);
+            transition: all 0.3s ease;
+        }
+        .music-player-widget:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .vinyl-art {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: spinVinyl 6s linear infinite;
+            animation-play-state: paused;
+        }
+        .vinyl-art.playing {
+            animation-play-state: running;
+        }
+        @keyframes spinVinyl {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Soundwave equalizer bars */
+        .sound-wave {
+            display: flex;
+            align-items: flex-end;
+            gap: 2.5px;
+            height: 14px;
+        }
+        .sound-bar {
+            width: 2.5px;
+            background: var(--accent);
+            border-radius: 2px;
+            height: 4px;
+            transition: height 0.2s ease;
+        }
+        .sound-wave.playing .sound-bar:nth-child(1) { animation: eq 0.8s ease-in-out infinite alternate; }
+        .sound-wave.playing .sound-bar:nth-child(2) { animation: eq 0.6s ease-in-out 0.2s infinite alternate; }
+        .sound-wave.playing .sound-bar:nth-child(3) { animation: eq 0.9s ease-in-out 0.4s infinite alternate; }
+        .sound-wave.playing .sound-bar:nth-child(4) { animation: eq 0.7s ease-in-out 0.1s infinite alternate; }
+        @keyframes eq {
+            0% { height: 4px; }
+            100% { height: 14px; }
+        }
+
+        /* Discord Live Widget (Lanyard) */
+        .discord-live-box {
+            background: rgba(88, 101, 242, 0.12);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Typewriter Cursor */
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: var(--accent);
+            vertical-align: text-bottom;
+            margin-left: 2px;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Sparkle Particle on Click */
+        .sparkle-particle {
+            position: fixed;
+            pointer-events: none;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--glow);
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            animation: popFade 0.6s ease-out forwards;
+        }
+        @keyframes popFade {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* User custom CSS */
+        {{ theme.custom_css | safe }}
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8 flex flex-col justify-center items-center">
+
+    <!-- Custom Cursor -->
+    {% if theme.cursor_effect == 'guns_dot' %}
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-dot-outline" id="cursor-outline"></div>
+    {% endif %}
+
+    <!-- Click to Enter Overlay -->
+    {% if theme.click_to_enter_enabled %}
+    <div id="click-overlay">
+        <div class="text-center p-6 space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl text-[var(--accent)] mb-2 shadow-[0_0_30px_var(--glow)]">
+                <i class="fa-solid fa-volume-high"></i>
+            </div>
+            <div class="pulsate-text">{{ theme.click_to_enter_text or '[ click anywhere to enter ]' }}</div>
+            {% if theme.click_to_enter_subtext %}
+            <p class="text-xs text-gray-400 font-mono tracking-wider">{{ theme.click_to_enter_subtext }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Background Layers -->
+    {% if theme.bg_type == 'image' and theme.bg_url %}
+        <img src="{{ theme.bg_url }}" class="custom-bg-media" alt="Background">
+    {% elif theme.bg_type == 'video' and theme.bg_url %}
+        <video autoplay muted loop playsinline class="custom-bg-media">
+            <source src="{{ theme.bg_url }}">
+        </video>
+    {% else %}
+        <canvas id="bg-canvas"></canvas>
+    {% endif %}
+
+    <!-- Audio Element -->
+    {% if music.enabled and music.audio_url %}
+    <audio id="bg-audio" preload="auto" {% if music.loop %}loop{% endif %}>
+        <source src="{{ music.audio_url }}" type="audio/mpeg">
+    </audio>
+
+    <!-- Floating Top Music Widget -->
+    <div class="music-player-widget" id="music-widget">
+        <img src="{{ music.cover_url or profile.avatar_url }}" class="vinyl-art" id="vinyl-art" alt="Cover">
+        <div class="flex flex-col pr-1 max-w-[130px] sm:max-w-[180px]">
+            <span class="text-xs font-semibold text-white truncate">{{ music.title or 'Audio Track' }}</span>
+            <span class="text-[10px] text-gray-400 truncate">{{ music.artist or 'Unknown Artist' }}</span>
+        </div>
+        <div class="sound-wave" id="sound-wave">
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+        </div>
+        <button id="music-toggle-btn" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition">
+            <i class="fa-solid fa-play" id="music-icon"></i>
+        </button>
+        <button id="volume-mute-btn" class="text-gray-400 hover:text-white text-xs pl-1">
+            <i class="fa-solid fa-volume-high" id="vol-icon"></i>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Main Ar3s Profile Card -->
+    <div class="profile-card my-auto">
+        <!-- Banner Container -->
+        <div class="relative card-banner">
+            <img src="{{ profile.banner_url }}" class="w-full h-full object-cover" alt="Banner">
+            <div class="card-banner-overlay"></div>
+            
+            <!-- Top Right Views Counter Badge -->
+            <div class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-[11px] font-mono text-gray-300 flex items-center gap-1.5 shadow-lg">
+                <i class="fa-solid fa-eye text-[var(--accent)] text-[10px]"></i>
+                <span>{{ profile.views or 1 }}</span>
+            </div>
+        </div>
+
+        <!-- Card Content Body -->
+        <div class="px-6 pb-6 pt-0 flex flex-col items-center text-center">
+            <!-- Avatar -->
+            <div class="avatar-wrapper relative">
+                <img src="{{ profile.avatar_url }}" class="avatar-img" id="user-avatar" alt="{{ profile.display_name }}">
+                <img id="user-avatar-deco" src="" class="absolute -top-[12%] -left-[12%] w-[124%] h-[124%] pointer-events-none hidden z-20" alt="Decoration">
+                <div class="status-dot z-30" id="discord-status-dot" title="Online"></div>
+            </div>
+
+            <!-- Display Name & Badges -->
+            <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2" id="main-display-name">
+                    {{ profile.display_name }}
+                </h1>
+                
+                <!-- Badges Row -->
+                <div class="flex items-center gap-1.5 ml-1">
+                    {% for badge in badges %}
+                    <div class="badge-pill" style="--badge-color: {{ badge.color }};" title="{{ badge.name }}">
+                        <i class="{{ badge.icon }}" style="color: {{ badge.color }};"></i>
+                        {% if badge.description %}
+                        <div class="tooltip">{{ badge.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Username Handle with Copy Button -->
+            <button id="copy-handle-btn" onclick="copyHandle('@{{ profile.username }}')" class="mt-1 group px-3 py-0.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/15 text-xs text-gray-400 hover:text-white transition flex items-center gap-1.5 font-mono">
+                <span id="main-username-tag">@{{ profile.username }}</span>
+                <i class="fa-regular fa-clone text-[10px] opacity-60 group-hover:opacity-100 transition"></i>
+            </button>
+
+            <!-- Dynamic Typewriter Text -->
+            <div class="mt-3 text-sm font-medium text-[var(--accent)] h-5 flex items-center justify-center">
+                <span id="typewriter"></span><span class="typewriter-cursor"></span>
+            </div>
+
+            <!-- Bio Description -->
+            {% if profile.bio %}
+            <p class="mt-2.5 text-xs sm:text-sm text-gray-300 max-w-md leading-relaxed font-normal">
+                {{ profile.bio }}
+            </p>
+            {% endif %}
+
+            <!-- Location & Occupation Meta Tags -->
+            <div class="mt-3.5 flex items-center justify-center gap-2 flex-wrap">
+                {% if profile.location %}
+                <div class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[11px] text-gray-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-location-dot text-rose-400 text-[10px]"></i>
+                    <span>{{ profile.location }}</span>
+                </div>
+                {% endif %}
+                {% if profile.occupation %}
+                <div class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[11px] text-gray-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-briefcase text-amber-400 text-[10px]"></i>
+                    <span>{{ profile.occupation }}</span>
+                </div>
+                {% endif %}
+                {% if profile.custom_status %}
+                <div class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[11px] text-gray-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-sparkles text-purple-400 text-[10px]"></i>
+                    <span>{{ profile.custom_status }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Discord Guns.lol Profile & Presence Widget -->
+            {% if profile.discord_user_id %}
+            <div id="discord-card" class="w-full mt-4 p-4 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/25 backdrop-blur-md shadow-lg text-left transition-all duration-300">
+                <!-- Top Bar: Discord Icon + Status Badge -->
+                <div class="flex items-center justify-between pb-2.5 border-b border-white/10">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-brands fa-discord text-lg text-[#5865F2]"></i>
+                        <span class="text-xs font-bold text-white tracking-wide uppercase font-mono">Discord Profili</span>
+                    </div>
+                    <div id="dc-status-badge" class="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-gray-300 flex items-center gap-1.5">
+                        <span id="dc-status-dot-inner" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]"></span>
+                        <span id="dc-status-text">Bağlanıyor...</span>
+                    </div>
+                </div>
+
+                <!-- User Details Row -->
+                <div class="flex items-center gap-3 mt-3">
+                    <div class="relative shrink-0">
+                        <img id="dc-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-md bg-black" alt="Discord Avatar">
+                        <img id="dc-avatar-deco" src="" class="absolute -top-[12%] -left-[12%] w-[124%] h-[124%] pointer-events-none hidden z-20" alt="Deco">
+                        <div id="dc-avatar-dot" class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0e0e15] shadow-[0_0_8px_#10b981] z-30"></div>
+                    </div>
+                    <div class="flex flex-col truncate flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span id="dc-global-name" class="font-bold text-sm text-white truncate">Discord</span>
+                            <span id="dc-clan-tag" class="px-1.5 py-0.5 rounded bg-[#5865F2]/20 border border-[#5865F2]/40 text-[9px] font-mono font-bold text-[#8ea1ff] hidden"></span>
+                            <span id="dc-handle" class="text-xs text-gray-400 truncate font-mono">@{{ profile.discord_user_id }}</span>
+                        </div>
+                        <span id="dc-custom-status" class="text-[11px] text-gray-300 truncate mt-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-comment-dots text-purple-400 text-[10px]"></i>
+                            <span id="dc-status-msg">Discord hesabı bağlı</span>
+                        </span>
+                    </div>
+                    <a href="https://discord.com/users/{{ profile.discord_user_id }}" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-[0_0_12px_rgba(88,101,242,0.4)]" title="Discord Profilini Aç">
+                        <span>Ekle</span>
+                        <i class="fa-solid fa-user-plus text-[10px]"></i>
+                    </a>
+                </div>
+
+                <!-- Live Spotify Activity (Dynamic) -->
+                <div id="dc-spotify-box" class="mt-3 pt-2.5 border-t border-white/10 hidden">
+                    <div class="flex items-center justify-between text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1.5">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-brands fa-spotify text-sm"></i> SPOTIFY DİNLİYOR
+                        </span>
+                        <span class="sound-wave playing">
+                            <span class="sound-bar" style="background:#10b981;"></span>
+                            <span class="sound-bar" style="background:#10b981;"></span>
+                            <span class="sound-bar" style="background:#10b981;"></span>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2.5 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                        <img id="dc-spotify-art" src="" class="w-10 h-10 rounded-lg object-cover shadow" alt="Spotify Art">
+                        <div class="flex flex-col truncate flex-1 min-w-0">
+                            <span id="dc-spotify-song" class="text-xs font-bold text-white truncate">Şarkı</span>
+                            <span id="dc-spotify-artist" class="text-[11px] text-gray-300 truncate">Sanatçı</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Game / Application Activity (Dynamic) -->
+                <div id="dc-game-box" class="mt-3 pt-2.5 border-t border-white/10 hidden">
+                    <div class="flex items-center justify-between text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1.5">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-gamepad text-sm"></i> AKTİVİTE / OYUN
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2.5 p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                        <img id="dc-game-art" src="" class="w-10 h-10 rounded-lg object-cover shadow hidden" alt="Game Art">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 shrink-0" id="dc-game-icon-fallback">
+                            <i class="fa-solid fa-gamepad text-lg"></i>
+                        </div>
+                        <div class="flex flex-col truncate flex-1 min-w-0">
+                            <span id="dc-game-name" class="text-xs font-bold text-white truncate">Oyun</span>
+                            <span id="dc-game-details" class="text-[11px] text-gray-300 truncate">Oynuyor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lanyard Join Helper (if not in Lanyard server) -->
+                <div id="dc-lanyard-hint" class="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-gray-400 flex items-center justify-between">
+                    <span>⚡ Canlı Spotify & aktivite için:</span>
+                    <a href="https://discord.gg/lanyard" target="_blank" class="text-[#5865F2] hover:underline font-semibold flex items-center gap-1">
+                        Lanyard Sunucusuna Katıl <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Social Media Icons Bar -->
+            {% if socials %}
+            <div class="w-full mt-5 pt-4 border-t border-white/5 flex items-center justify-center gap-2.5 flex-wrap">
+                {% for social in socials %}
+                <a href="{{ social.url }}" target="_blank" rel="noopener noreferrer" 
+                   class="social-icon-btn" 
+                   style="--social-color: {{ social.color or '#ffffff' }};"
+                   onclick="trackClick('social', {{ social.id }})"
+                   title="{{ social.title }}">
+                    <i class="{{ social.icon }}" style="color: {{ social.color or '#ffffff' }};"></i>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Custom Showcase Links / Projects -->
+            {% if links %}
+            <div class="w-full mt-5 space-y-2.5 text-left">
+                {% for link in links %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" 
+                   class="custom-link-card group" 
+                   onclick="trackClick('link', {{ link.id }})">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        <div class="custom-link-icon">
+                            <i class="{{ link.icon or 'fa-solid fa-arrow-up-right-from-square' }}"></i>
+                        </div>
+                        <div class="flex flex-col truncate">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-sm text-white group-hover:text-[var(--accent)] transition truncate">
+                                    {{ link.title }}
+                                </span>
+                                {% if link.badge_text %}
+                                <span class="px-1.5 py-0.5 text-[9px] font-bold rounded uppercase tracking-wider text-white" style="background-color: {{ link.badge_color or '#8b5cf6' }};">
+                                    {{ link.badge_text }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% if link.description %}
+                            <span class="text-xs text-gray-400 truncate mt-0.5 font-light">
+                                {{ link.description }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-gray-500 group-hover:text-white group-hover:translate-x-1 transition duration-200 pl-2">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Minimal Footer & Admin Access -->
+            <div class="mt-6 pt-4 border-t border-white/5 w-full flex items-center justify-between text-[11px] text-gray-500 font-mono">
+                <span>{{ profile.display_name }} &copy; 2026</span>
+                <a href="/admin" class="hover:text-gray-300 transition flex items-center gap-1 opacity-40 hover:opacity-100" title="Admin Paneli">
+                    <i class="fa-solid fa-lock text-[10px]"></i>
+                    <span>admin</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Particle Animation Engine -->
+    <script>
+        // Particle Background Engine
+        const canvas = document.getElementById('bg-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const bgType = "{{ theme.bg_type or 'particles_stars' }}";
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const particleCount = bgType === 'particles_matrix' ? 80 : 90;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2.2 + 0.5,
+                    speedX: (Math.random() - 0.5) * 0.4,
+                    speedY: (Math.random() - 0.5) * 0.4,
+                    alpha: Math.random() * 0.8 + 0.2,
+                    char: String.fromCharCode(0x30A0 + Math.random() * 96)
+                });
+            }
+
+            let mouse = { x: width / 2, y: height / 2 };
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+
+                if (bgType === 'particles_stars') {
+                    for (let p of particles) {
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+
+                        if (p.x < 0) p.x = width;
+                        if (p.x > width) p.x = 0;
+                        if (p.y < 0) p.y = height;
+                        if (p.y > height) p.y = 0;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = "{{ theme.accent_color or '#8b5cf6' }}";
+                        ctx.fill();
+                    }
+                } else if (bgType === 'particles_snow') {
+                    for (let p of particles) {
+                        p.y += Math.abs(p.speedY) + 0.5;
+                        p.x += Math.sin(p.y * 0.01) * 0.5;
+                        if (p.y > height) { p.y = 0; p.x = Math.random() * width; }
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 1.3, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(240, 245, 255, ${p.alpha * 0.8})`;
+                        ctx.fill();
+                    }
+                } else if (bgType === 'particles_matrix') {
+                    ctx.font = '12px monospace';
+                    ctx.fillStyle = "{{ theme.accent_color or '#10b981' }}";
+                    for (let p of particles) {
+                        p.y += 2.5;
+                        if (p.y > height) p.y = 0;
+                        ctx.fillText(p.char, p.x, p.y);
+                    }
+                } else {
+                    // Default soft orbs
+                    for (let p of particles) {
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        if (p.x < 0) p.x = width;
+                        if (p.x > width) p.x = 0;
+                        if (p.y < 0) p.y = height;
+                        if (p.y > height) p.y = 0;
+
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(139, 92, 246, ${p.alpha * 0.4})`;
+                        ctx.fill();
+                    }
+                }
+
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        // Custom Cursor Movement
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+        if (cursorDot && cursorOutline) {
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+                cursorOutline.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 300, fill: "forwards" });
+            });
+        }
+
+        // Click Sparkle Effect
+        {% if theme.click_effect == 'sparkle' %}
+        window.addEventListener('click', (e) => {
+            const particleCount = 8;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'sparkle-particle';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 50 + 20;
+                particle.style.setProperty('--tx', `${Math.cos(angle) * dist}px`);
+                particle.style.setProperty('--ty', `${Math.sin(angle) * dist}px`);
+                particle.style.left = `${e.clientX}px`;
+                particle.style.top = `${e.clientY}px`;
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        });
+        {% endif %}
+
+        // Audio & Click-to-Enter System
+        const audio = document.getElementById('bg-audio');
+        const overlay = document.getElementById('click-overlay');
+        const vinyl = document.getElementById('vinyl-art');
+        const soundWave = document.getElementById('sound-wave');
+        const musicBtn = document.getElementById('music-toggle-btn');
+        const musicIcon = document.getElementById('music-icon');
+        const volBtn = document.getElementById('volume-mute-btn');
+        const volIcon = document.getElementById('vol-icon');
+
+        if (audio) {
+            audio.volume = {{ music.initial_volume or 0.5 }};
+        }
+
+        function playAudio() {
+            if (audio) {
+                audio.play().then(() => {
+                    if (vinyl) vinyl.classList.add('playing');
+                    if (soundWave) soundWave.classList.add('playing');
+                    if (musicIcon) {
+                        musicIcon.classList.remove('fa-play');
+                        musicIcon.classList.add('fa-pause');
+                    }
+                }).catch(e => console.log('Audio autoplay prevented:', e));
+            }
+        }
+
+        function pauseAudio() {
+            if (audio) {
+                audio.pause();
+                if (vinyl) vinyl.classList.remove('playing');
+                if (soundWave) soundWave.classList.remove('playing');
+                if (musicIcon) {
+                    musicIcon.classList.remove('fa-pause');
+                    musicIcon.classList.add('fa-play');
+                }
+            }
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', () => {
+                overlay.classList.add('hidden-overlay');
+                playAudio();
+            });
+        }
+
+        if (musicBtn && audio) {
+            musicBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    playAudio();
+                } else {
+                    pauseAudio();
+                }
+            });
+        }
+
+        if (volBtn && audio) {
+            volBtn.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                if (audio.muted) {
+                    volIcon.classList.remove('fa-volume-high');
+                    volIcon.classList.add('fa-volume-xmark');
+                } else {
+                    volIcon.classList.remove('fa-volume-xmark');
+                    volIcon.classList.add('fa-volume-high');
+                }
+            });
+        }
+
+        // Dynamic Typewriter Effect
+        const typingTexts = {{ profile.typing_texts_list | tojson }};
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typewriterEl = document.getElementById('typewriter');
+
+        function typeLoop() {
+            if (!typingTexts || typingTexts.length === 0 || !typewriterEl) return;
+            const currentText = typingTexts[textIndex];
+
+            if (isDeleting) {
+                typewriterEl.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typewriterEl.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let speed = isDeleting ? 40 : 90;
+
+            if (!isDeleting && charIndex === currentText.length) {
+                speed = 2200; // Pause at end
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % typingTexts.length;
+                speed = 400;
+            }
+
+            setTimeout(typeLoop, speed);
+        }
+        typeLoop();
+
+        // Copy Handle to Clipboard
+        function copyHandle(handle) {
+            navigator.clipboard.writeText(handle);
+            const btn = document.getElementById('copy-handle-btn');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<span class="text-[var(--accent)] font-semibold">Kopyalandı!</span> <i class="fa-solid fa-check text-[var(--accent)]"></i>`;
+            setTimeout(() => {
+                btn.innerHTML = origHtml;
+            }, 1800);
+        }
+
+        // Link click tracking
+        function trackClick(type, id) {
+            fetch(`/api/click/${type}/${id}`, { method: 'POST' }).catch(() => {});
+        }
+
+        // Discord Lanyard Real-Time Engine
+        {% if profile.discord_user_id %}
+        const discordUserId = "{{ profile.discord_user_id }}".trim();
+        if (discordUserId) {
+            function resolveDiscordAsset(appId, asset) {
+                if (!asset) return null;
+                if (asset.startsWith('mp:external/')) {
+                    const match = asset.match(/https?\/(.+)/);
+                    if (match && match[1]) {
+                        return 'https://' + match[1];
+                    }
+                    return 'https://media.discordapp.net/' + asset.replace('mp:', '');
+                }
+                return `https://cdn.discordapp.com/app-assets/${appId}/${asset}.png`;
+            }
+
+            function updateDiscordUI(data) {
+                if (!data) return;
+
+                const statusColors = {
+                    online: { color: '#10b981', label: 'Çevrimiçi', shadow: '#10b981' },
+                    idle: { color: '#f59e0b', label: 'Boşta', shadow: '#f59e0b' },
+                    dnd: { color: '#ef4444', label: 'Rahatsız Etmeyin', shadow: '#ef4444' },
+                    offline: { color: '#6b7280', label: 'Çevrimdışı', shadow: 'rgba(255,255,255,0.2)' }
+                };
+
+                const st = statusColors[data.discord_status] || statusColors.offline;
+
+                // Main Avatar Status Dot
+                const mainStatusDot = document.getElementById('discord-status-dot');
+                if (mainStatusDot) {
+                    mainStatusDot.style.backgroundColor = st.color;
+                    mainStatusDot.style.boxShadow = `0 0 10px ${st.shadow}`;
+                    mainStatusDot.title = st.label;
+                }
+
+                // Discord Card Status
+                const dcBadgeText = document.getElementById('dc-status-text');
+                const dcBadgeDot = document.getElementById('dc-status-dot-inner');
+                const dcAvatarDot = document.getElementById('dc-avatar-dot');
+                if (dcBadgeText) dcBadgeText.textContent = st.label;
+                if (dcBadgeDot) {
+                    dcBadgeDot.style.backgroundColor = st.color;
+                    dcBadgeDot.style.boxShadow = `0 0 8px ${st.shadow}`;
+                }
+                if (dcAvatarDot) {
+                    dcAvatarDot.style.backgroundColor = st.color;
+                    dcAvatarDot.style.boxShadow = `0 0 8px ${st.shadow}`;
+                }
+
+                // User Info
+                if (data.discord_user) {
+                    const u = data.discord_user;
+                    const dcGlobal = document.getElementById('dc-global-name');
+                    const dcHandle = document.getElementById('dc-handle');
+                    const dcAvatar = document.getElementById('dc-avatar');
+                    const mainAvatar = document.getElementById('user-avatar');
+                    const userDeco = document.getElementById('user-avatar-deco');
+                    const dcDeco = document.getElementById('dc-avatar-deco');
+                    const clanTag = document.getElementById('dc-clan-tag');
+
+                    if (dcGlobal) dcGlobal.textContent = u.global_name || u.display_name || u.username;
+                    if (dcHandle) dcHandle.textContent = `@${u.username}`;
+
+                    // Primary Guild Tag
+                    if (clanTag) {
+                        if (u.primary_guild && u.primary_guild.tag) {
+                            clanTag.textContent = u.primary_guild.tag;
+                            clanTag.classList.remove('hidden');
+                        } else {
+                            clanTag.classList.add('hidden');
+                        }
+                    }
+
+                    // Avatar Sync
+                    if (u.avatar) {
+                        const isGif = u.avatar.startsWith('a_');
+                        const ext = isGif ? 'gif' : 'webp';
+                        const avatarUrl = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${ext}?size=512`;
+                        if (dcAvatar) dcAvatar.src = avatarUrl;
+                        if (mainAvatar && (mainAvatar.src.includes('unsplash') || mainAvatar.src.includes('discordapp'))) {
+                            mainAvatar.src = avatarUrl;
+                        }
+                    }
+
+                    // Avatar Decoration
+                    if (u.avatar_decoration_data && u.avatar_decoration_data.asset) {
+                        const decoUrl = `https://cdn.discordapp.com/avatar-decoration-presets/${u.avatar_decoration_data.asset}.png`;
+                        if (userDeco) {
+                            userDeco.src = decoUrl;
+                            userDeco.classList.remove('hidden');
+                        }
+                        if (dcDeco) {
+                            dcDeco.src = decoUrl;
+                            dcDeco.classList.remove('hidden');
+                        }
+                    }
+                }
+
+                // Custom Status Message
+                const customAct = data.activities ? data.activities.find(a => a.type === 4) : null;
+                const dcStatusMsg = document.getElementById('dc-status-msg');
+                if (dcStatusMsg) {
+                    if (customAct && (customAct.state || customAct.emoji)) {
+                        const emojiStr = customAct.emoji ? (customAct.emoji.name || '') + ' ' : '';
+                        dcStatusMsg.textContent = emojiStr + (customAct.state || '');
+                    } else {
+                        dcStatusMsg.textContent = st.label;
+                    }
+                }
+
+                // Spotify Activity
+                const spotifyBox = document.getElementById('dc-spotify-box');
+                if (data.listening_to_spotify && data.spotify) {
+                    if (spotifyBox) {
+                        spotifyBox.classList.remove('hidden');
+                        document.getElementById('dc-spotify-song').textContent = data.spotify.song;
+                        document.getElementById('dc-spotify-artist').textContent = data.spotify.artist;
+                        if (data.spotify.album_art_url) {
+                            document.getElementById('dc-spotify-art').src = data.spotify.album_art_url;
+                        }
+                    }
+                } else if (spotifyBox) {
+                    spotifyBox.classList.add('hidden');
+                }
+
+                // Game / App Activity (e.g. Visual Studio Code / Games)
+                const gameBox = document.getElementById('dc-game-box');
+                const gameAct = data.activities ? data.activities.find(a => a.type === 0) : null;
+                if (gameAct) {
+                    if (gameBox) {
+                        gameBox.classList.remove('hidden');
+                        document.getElementById('dc-game-name').textContent = gameAct.name;
+                        document.getElementById('dc-game-details').textContent = gameAct.details || gameAct.state || 'Oynuyor';
+                        
+                        const artImg = document.getElementById('dc-game-art');
+                        const fallbackIcon = document.getElementById('dc-game-icon-fallback');
+                        if (gameAct.assets && (gameAct.assets.large_image || gameAct.assets.small_image)) {
+                            const assetKey = gameAct.assets.large_image || gameAct.assets.small_image;
+                            const resolvedUrl = resolveDiscordAsset(gameAct.application_id, assetKey);
+                            if (resolvedUrl && artImg) {
+                                artImg.src = resolvedUrl;
+                                artImg.classList.remove('hidden');
+                                if (fallbackIcon) fallbackIcon.classList.add('hidden');
+                            }
+                        } else {
+                            if (artImg) artImg.classList.add('hidden');
+                            if (fallbackIcon) fallbackIcon.classList.remove('hidden');
+                        }
+                    }
+                } else if (gameBox) {
+                    gameBox.classList.add('hidden');
+                }
+
+                // Hide Lanyard hint since connection succeeded
+                const hint = document.getElementById('dc-lanyard-hint');
+                if (hint) hint.classList.add('hidden');
+            }
+
+            // Initial REST fetch
+            fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success && res.data) {
+                        updateDiscordUI(res.data);
+                    } else {
+                        // Not in Lanyard server yet, show hint
+                        const hint = document.getElementById('dc-lanyard-hint');
+                        if (hint) hint.classList.remove('hidden');
+                        const dcBadgeText = document.getElementById('dc-status-text');
+                        if (dcBadgeText) dcBadgeText.textContent = 'Bağlı (Lanyard Bekleniyor)';
+                    }
+                })
+                .catch(() => {
+                    const hint = document.getElementById('dc-lanyard-hint');
+                    if (hint) hint.classList.remove('hidden');
+                });
+
+            // WebSocket Live Connection
+            try {
+                const ws = new WebSocket('wss://api.lanyard.rest/socket');
+                let heartbeatInterval = null;
+
+                ws.onmessage = (event) => {
+                    const msg = JSON.parse(event.data);
+                    if (msg.op === 1) { // Hello
+                        heartbeatInterval = setInterval(() => {
+                            ws.send(JSON.stringify({ op: 3 }));
+                        }, msg.d.heartbeat_interval);
+
+                        // Subscribe to user
+                        ws.send(JSON.stringify({
+                            op: 2,
+                            d: { subscribe_to_id: discordUserId }
+                        }));
+                    } else if (msg.op === 0) { // Event
+                        if (msg.t === 'INIT_STATE' || msg.t === 'PRESENCE_UPDATE') {
+                            updateDiscordUI(msg.d);
+                        }
+                    }
+                };
+
+                ws.onclose = () => {
+                    if (heartbeatInterval) clearInterval(heartbeatInterval);
+                };
+            } catch (e) {
+                console.log('Lanyard WS not supported:', e);
+            }
+        }
+        {% endif %}
+    </script>
+</body>
+</html>
